@@ -82,6 +82,22 @@ app.get('/doctors/:id', async (req, res) => {
   }
 });
 
+// 🩺 API 3: Book Appointment Registry (POST)
+app.post('/appointments', async (req, res) => {
+  try {
+    if (!appointmentsCollection) {
+      return res.status(500).json({ message: "Database connection not ready yet" });
+    }
+    const bookingData = req.body;
+    bookingData.createdAt = new Date();
+    const result = await appointmentsCollection.insertOne(bookingData);
+    res.status(201).json({ success: true, insertedId: result.insertedId });
+  } catch (error) {
+    res.status(500).json({ message: "Booking database insertion failed", error: error.message });
+  }
+});
+
+
 
 
 
