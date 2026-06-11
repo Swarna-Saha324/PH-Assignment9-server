@@ -153,10 +153,30 @@ app.put('/appointments/:id', async (req, res) => {
   }
 });
 
+// 🩺 API 6: Delete Appointment (DELETE)
+app.delete('/appointments/:id', async (req, res) => {
+  try {
+    if (!appointmentsCollection) {
+      return res.status(500).json({ message: "Database connection not ready yet" });
+    }
 
+    const id = req.params.id;
+    if (id.length !== 24 || !/^[0-9a-fA-F]{24}$/.test(id)) {
+      return res.status(400).json({ message: "Invalid ID format" });
+    }
 
+    const query = { _id: new ObjectId(id) };
+    const result = await appointmentsCollection.deleteOne(query);
 
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "Appointment not found" });
+    }
 
+    res.status(200).json({ success: true, message: "Appointment deleted successfully!" });
+  } catch (error) {
+    res.status(500).json({ message: "Delete operation failed", error: error.message });
+  }
+});
 app.listen(PORT, () => {
     console.log(`Server is perfectly running on port ${PORT}`);
 });
