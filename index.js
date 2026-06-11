@@ -39,12 +39,12 @@ async function run() {
 }
 run().catch(console.dir);
 
-// 🩺 Default Base Route
+//  Default Base Route
 app.get('/', (req, res) => {
     res.send('Doctor Booking Server is Humming Nicely!');
 });
 
-// 🩺 API 1: Fetch All Doctors
+// API 1: Fetch All Doctors
 app.get('/doctors', async (req, res) => {
   try {
     if (!doctorsCollection) {
@@ -57,7 +57,7 @@ app.get('/doctors', async (req, res) => {
   }
 });
 
-// 🩺 API 2: Single Doctor Dynamic Details Parsing via MongoDB _id
+// API 2: Single Doctor Dynamic Details Parsing via MongoDB _id
 app.get('/doctors/:id', async (req, res) => {
   try {
     if (!doctorsCollection) {
@@ -82,7 +82,7 @@ app.get('/doctors/:id', async (req, res) => {
   }
 });
 
-// 🩺 API 3: Book Appointment Registry (POST)
+// API 3: Book Appointment Registry (POST)
 app.post('/appointments', async (req, res) => {
   try {
     if (!appointmentsCollection) {
@@ -96,7 +96,7 @@ app.post('/appointments', async (req, res) => {
     res.status(500).json({ message: "Booking database insertion failed", error: error.message });
   }
 });
-// 🩺 API 4: Get Appointments By User Email (For Dashboard)
+// API 4: Get Appointments By User Email (For Dashboard)
 app.get('/appointments', async (req, res) => {
   try {
     if (!appointmentsCollection) {
@@ -117,10 +117,46 @@ app.get('/appointments', async (req, res) => {
   }
 });
 
+// API 5: Update Appointment (PUT)
+app.put('/appointments/:id', async (req, res) => {
+  try {
+    if (!appointmentsCollection) {
+      return res.status(500).json({ message: "Database connection not ready yet" });
+    }
+
+    const id = req.params.id;
+    if (id.length !== 24 || !/^[0-9a-fA-F]{24}$/.test(id)) {
+      return res.status(400).json({ message: "Invalid ID format" });
+    }
+
+    const { patientName, patientPhone, selectedSlot } = req.body;
+    const filter = { _id: new ObjectId(id) };
+    
+    const updatedDoc = {
+      $set: {
+        patientName,
+        patientPhone,
+        selectedSlot,
+        updatedAt: new Date()
+      },
+    };
+
+    const result = await appointmentsCollection.updateOne(filter, updatedDoc);
+    
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "Appointment record not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Appointment updated successfully!" });
+  } catch (error) {
+    res.status(500).json({ message: "Update layer failed", error: error.message });
+  }
+});
+
 
 
 
 
 app.listen(PORT, () => {
-    console.log(`🚀 Server is perfectly running on port ${PORT}`);
+    console.log(`Server is perfectly running on port ${PORT}`);
 });
