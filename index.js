@@ -1,19 +1,16 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const cors = require('cors');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+
 dotenv.config();
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
-
 const app = express();
-
-const cors = require('cors');
-
 app.use(cors());
 app.use(express.json());
 
+const PORT = process.env.PORT || 5000; 
 const uri = process.env.MONGODB_URI;
-
-const PORT = process.env.PORT;
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -23,24 +20,45 @@ const client = new MongoClient(uri, {
   }
 });
 
+let db, usersCollection, doctorsCollection, appointmentsCollection;
+
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-    // Send a ping to confirm a successful connection
+    
+    db = client.db('docAppoint');
+    usersCollection = db.collection('users');
+    doctorsCollection = db.collection('doctors');
+    appointmentsCollection = db.collection('appointments');
+    
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
-    // Ensures that the client will close when you finish/error
-    //await client.close();
+    console.log("⚡ Pinged your deployment. You successfully connected to MongoDB!");
+  } catch (error) {
+    console.error("Database connection fault tracking:", error);
   }
 }
 run().catch(console.dir);
 
+// 🩺 Default Base Route
 app.get('/', (req, res) => {
-    res.send('port is working');
+    res.send('Doctor Booking Server is Humming Nicely!');
 });
 
+// 🩺 API 1: Fetch All Doctors
+app.get('/doctors', async (req, res) => {
+  try {
+    if (!doctorsCollection) {
+      return res.status(500).json({ message: "Database connection not ready yet" });
+    }
+    const doctors = await doctorsCollection.find({}).toArray();
+    res.status(200).json(doctors);
+  } catch (error) {
+    res.status(500).json({ message: "Data fetch layer crashed", error: error.message });
+  }
+});
+
+
+
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`🚀 Server is perfectly running on port ${PORT}`);
 });
