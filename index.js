@@ -96,6 +96,26 @@ app.post('/appointments', async (req, res) => {
     res.status(500).json({ message: "Booking database insertion failed", error: error.message });
   }
 });
+// 🩺 API 4: Get Appointments By User Email (For Dashboard)
+app.get('/appointments', async (req, res) => {
+  try {
+    if (!appointmentsCollection) {
+      return res.status(500).json({ message: "Database connection not ready yet" });
+    }
+    
+    const userEmail = req.query.email;
+    if (!userEmail) {
+      return res.status(400).json({ message: "Email query parameter is required" });
+    }
+
+    
+    const query = { userEmail: userEmail }; 
+    const result = await appointmentsCollection.find(query).toArray();
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch user appointments", error: error.message });
+  }
+});
 
 
 
