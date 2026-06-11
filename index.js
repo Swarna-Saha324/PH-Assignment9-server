@@ -57,6 +57,32 @@ app.get('/doctors', async (req, res) => {
   }
 });
 
+// 🩺 API 2: Single Doctor Dynamic Details Parsing via MongoDB _id
+app.get('/doctors/:id', async (req, res) => {
+  try {
+    if (!doctorsCollection) {
+      return res.status(500).json({ message: "Database connection not ready yet" });
+    }
+    
+    const targetId = req.params.id;
+
+    if (targetId.length !== 24 || !/^[0-9a-fA-F]{24}$/.test(targetId)) {
+      return res.status(400).json({ message: "Invalid ID format provided" });
+    }
+
+    const doctor = await doctorsCollection.findOne({ _id: new ObjectId(targetId) });
+    
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor profile not found in database" });
+    }
+    
+    res.status(200).json(doctor);
+  } catch (error) {
+    res.status(500).json({ message: "Server parsing index failed", error: error.message });
+  }
+});
+
+
 
 
 app.listen(PORT, () => {
